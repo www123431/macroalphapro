@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+/* MacroAlphaPro — dark institutional theme (fintech / risk-desk aesthetic). */
+:root {
+  --background: #0a0e17;     /* deep slate */
+  --panel:      #111726;     /* card surface */
+  --panel-2:    #161d2e;
+  --border:     #232c40;
+  --foreground: #e7eaf0;
+  --muted:      #8b95ab;
+  --accent:     #38bdf8;     /* sky */
+  --ok:         #34d399;     /* emerald */
+  --warn:       #fbbf24;     /* amber */
+  --alert:      #f87171;     /* red */
+
+  /* ── Viz semantic tokens (R2.2 2026-06-04) ──
+     These are SEMANTIC names that viz components map onto. The same
+     hex never means two things in different surfaces. Reverse-mapping
+     these in JS lives in @/lib/vizTokens — the two must stay in sync.
+
+     Verdict states (RED Lesson / verdict_red etc.)        */
+  --vz-verdict-red:      #ef4444;   /* killed */
+  --vz-verdict-green:    #34d399;   /* deploy */
+  --vz-verdict-marginal: #f59e0b;   /* yellow */
+  --vz-verdict-pending:  #94a3b8;   /* untested */
+
+  /* SLM lifecycle states */
+  --vz-slm-pre-live:     #7aa2f7;
+  --vz-slm-validation:   #f5c518;
+  --vz-slm-live:         #34d399;
+  --vz-slm-decay:        #fb923c;
+  --vz-slm-out:          #64748b;
+
+  /* Mechanism roles (correlation network, etc.) */
+  --vz-role-alpha:       #7aa2f7;
+  --vz-role-diversifier: #cbd5e1;
+  --vz-role-insurance:   #ef4444;
+  --vz-role-carry:       #34d399;
+  --vz-role-hedge:       #fb923c;
+
+  /* Correlation signs (correlation network, decay viz) — the sign-flip
+     convention: POSITIVE corr between two sleeves is RED (concerning,
+     unintended overlap), NEGATIVE is GREEN (diversifying as designed).
+     Verdict reds are reused intentionally so the eye learns one meaning. */
+  --vz-corr-positive:    #ef4444;
+  --vz-corr-negative:    #34d399;
+
+  /* Process flow zones (system-flow diagram) */
+  --vz-zone-ingest:      #7aa2f7;
+  --vz-zone-triage:      #f5c518;
+  --vz-zone-test:        #a77bf7;
+  --vz-zone-verdict:     #cbd5e1;
+  --vz-zone-deploy:      #34d399;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-panel: var(--panel);
+  --color-panel2: var(--panel-2);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-alert: var(--alert);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* tabular numerals for financial figures */
+.tnum { font-variant-numeric: tabular-nums; font-family: var(--font-geist-mono), ui-monospace, monospace; }
+
+/* hide scrollbars on horizontally-scrollable strips (nav tabs) — no stray arrow buttons */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+html { scroll-behavior: smooth; }
+
+/* a11y — visible keyboard focus on all interactive elements (mouse clicks unaffected) */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* dark dropdown options — browsers default <option> to system colors,
+   producing unreadable white-on-white inside a dark theme. Apply panel
+   bg + foreground text globally so every <select> renders correctly
+   without each call site needing [&>option]:bg-panel2 overrides.
+   (2026-06-01 layout fix.) */
+select { color-scheme: dark; }
+
+
+/* ── Print / Save-as-PDF (R3.2 2026-06-04) ──
+   Mantra: hide CHROME, show CONTENT, force readable contrast.
+   Triggered both by the browser's print dialog and by elements
+   carrying class="print-mode-on" (the React print-mode wrapper).
+   Mark page elements with .no-print to drop them from PDFs and
+   .print-only to make them appear ONLY in the printable view. */
+.print-only { display: none; }
+
+@media print {
+  :root {
+    /* Force readable contrast in the printout — dark theme reads
+       black-on-white for archival. */
+    --background: #ffffff;
+    --panel:      #ffffff;
+    --panel-2:    #f5f5f5;
+    --border:     #d1d5db;
+    --foreground: #111827;
+    --muted:      #4b5563;
+    --accent:     #0369a1;
+    --ok:         #047857;
+    --warn:       #b45309;
+    --alert:      #b91c1c;
+  }
+
+  body, html { background: #ffffff !important; color: #111827 !important; }
+  .no-print, .no-print * { display: none !important; }
+  .print-only { display: block !important; }
+
+  /* Hide chrome (nav, sidebar, sticky / fixed toolbars, ChatFloater,
+     banners, action buttons, anything explicitly marked no-print) */
+  nav, aside, header[role="navigation"],
+  [data-no-print="true"],
+  .no-print,
+  .sticky, [class*="sticky bottom-"],
+  [class*=" fixed"], [class^="fixed"] { display: none !important; }
+
+  /* Drop animations + interactive affordances */
+  * { animation: none !important; transition: none !important; }
+  a[href]:after { content: ""; }   /* don't append href after links */
+
+  /* Cards lose backdrop tint + borders bleed; preserve structure
+     with a single hairline border, no shadow. */
+  [class*="bg-panel"], [class*="bg-bg"], [class*="bg-accent"] {
+    background: transparent !important;
+  }
+  [class*="border-"] { border-color: #d1d5db !important; }
+
+  /* Section breaks — anything marked .page-break starts a new page */
+  .page-break { page-break-before: always; }
+
+  /* Page margin */
+  @page { margin: 0.75in; }
+}
+option {
+  background-color: var(--panel-2);
+  color: var(--foreground);
+}
+
+/* dark scrollbars to match the theme (replaces the OS light scrollbar + its arrow buttons) */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }   /* Firefox */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+  border: 2px solid var(--background);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+::-webkit-scrollbar-button { display: none; }   /* kill the up/down arrow buttons */
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* ── ambient animated background ─────────────────────────────────────────── */
+.bg-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 46px 46px;
+  animation: gridDrift 38s linear infinite;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 40%, transparent 100%);
+}
+@keyframes gridDrift { to { background-position: 46px 46px; } }
+
+.bg-glow { width: 62vw; height: 62vw; border-radius: 9999px; filter: blur(130px); }
+.bg-glow-1 {
+  background: radial-gradient(circle, rgba(56,189,248,0.20), transparent 62%);
+  top: -22vw; left: -12vw; animation: floatA 19s ease-in-out infinite;
+}
+.bg-glow-2 {
+  background: radial-gradient(circle, rgba(52,211,153,0.14), transparent 62%);
+  bottom: -26vw; right: -12vw; animation: floatB 23s ease-in-out infinite;
+}
+@keyframes floatA { 0%,100% { transform: translate(0,0) } 50% { transform: translate(6vw,4vw) } }
+@keyframes floatB { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-5vw,-3vw) } }
+
+/* ── reusable button glow (CTA) ──────────────────────────────────────────── */
+.btn-glow {
+  position: relative;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--border);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .25s ease;
+}
+.btn-glow:hover {
+  border-color: color-mix(in oklab, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 40%, transparent),
+              0 12px 40px -12px color-mix(in oklab, var(--accent) 70%, transparent);
+}
+
+/* gentle pulse for live indicators */
+@keyframes livePulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+.live-dot { animation: livePulse 2s ease-in-out infinite; }
+
+/* shimmer for skeleton loaders */
+.shimmer {
+  background: linear-gradient(90deg, var(--panel) 25%, var(--panel-2) 37%, var(--panel) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-grid, .bg-glow-1, .bg-glow-2, .live-dot, .shimmer { animation: none; }
+  html { scroll-behavior: auto; }
+}

@@ -1,0 +1,74 @@
+{
+  "anomaly_sentinel": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 5,
+    "prompt_sha": "82cf9914ecdf3812",
+    "tools_sha": "d7b93f477044e718"
+  },
+  "attribution_analyst": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 5,
+    "prompt_sha": "6f9765a024de17d5",
+    "tools_sha": "91cf477286e66694"
+  },
+  "audit_recorder": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 5,
+    "prompt_sha": "d60698d63d56fbc8",
+    "tools_sha": "0cc04a50f3d526f9"
+  },
+  "chief_of_staff": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 6,
+    "prompt_sha": "152a13a2a8a571cd",
+    "tools_sha": "6dc0558cc7bb8c47"
+  },
+  "decay_sentinel": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 4,
+    "prompt_sha": "0cf0f8f2c66dd86f",
+    "tools_sha": "34ca872d90468949"
+  },
+  "devils_advocate": {
+    "model": [
+      "deepseek",
+      "deepseek-v4-pro"
+    ],
+    "n_tools": 0,
+    "prompt_sha": "6174b4bdb1e68d9d",
+    "tools_sha": "e3b0c44298fc1c14"
+  },
+  "dq_inspector": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 6,
+    "prompt_sha": "faf9312e9b7efaae",
+    "tools_sha": "b0f43514827c7d64"
+  },
+  "risk_manager": {
+    "model": [
+      "anthropic",
+      "claude-sonnet-4-6"
+    ],
+    "n_tools": 5,
+    "prompt_sha": "61748d092003f2c0",
+    "tools_sha": "5538c083cdfb0674"
+  }
+}

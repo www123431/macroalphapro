@@ -1,0 +1,9 @@
+{
+  "level": "severe",
+  "reason": "risk_manager_pre_trade: risk_manager mode 2: sleeve 'ss_sp500' drift 25.0% relative to expected 29.5% (eff 22.1%); exceeds 10% threshold",
+  "triggered_at": "2026-06-17T22:02:58.611429Z",
+  "auto_reset": false,
+  "vix_today": null,
+  "vix_prev": null,
+  "quota_frac": null
+}

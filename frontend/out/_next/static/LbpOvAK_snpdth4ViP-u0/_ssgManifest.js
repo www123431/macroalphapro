@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fresearch\u002Flessons\u002F[lesson_id]","\u002Fresearch\u002Fpapers\u002F[paper_id]","\u002Fresearch\u002Fpapers\u002F[paper_id]\u002Freader"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

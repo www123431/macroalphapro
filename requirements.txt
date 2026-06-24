@@ -1,0 +1,42 @@
+# Macro Alpha Pro — Python dependencies
+# See docs/deployment_guide.md for full setup instructions.
+
+# ── Core data + numerics ─────────────────────────────────────────────────────
+numpy
+pandas
+pyarrow                    # parquet read/write engine (used everywhere; CI lacked it → api.contract fail)
+scipy
+scikit-learn
+arch                       # GARCH(1,1) volatility forecasting (signal_board)
+pandas-market-calendars    # NYSE trading day calendar (daily_batch)
+
+# ── Data sources ─────────────────────────────────────────────────────────────
+yfinance                   # ETF prices + VIX
+requests                   # FRED CSV / CFTC COT (P3a) / generic HTTP
+feedparser                 # GNews / SEC EDGAR feed parsing
+
+# ── ORM + storage ────────────────────────────────────────────────────────────
+sqlalchemy                 # SQLite (dev) / PostgreSQL (prod)
+portalocker                # cross-platform file locking (engine/llm_cost_ledger.py)
+wrds                       # Wave B WRDS / CRSP+Compustat data access (activated 2026-05-11)
+
+# ── UI (Streamlit + plotting) ────────────────────────────────────────────────
+streamlit
+plotly
+win10toast                 # Windows toast notifications (Ops Watchdog spec id=63 §2.6;
+                           # fail-soft if unavailable on non-Windows)
+
+# ── LLM (Gemini 2.5 Flash) ───────────────────────────────────────────────────
+google-generativeai
+langgraph                  # agentic flow control
+langchain_google_genai
+
+# ── Project History RAG (P2 shipped 2026-05-07) ──────────────────────────────
+chromadb                   # local persistent vector store
+sentence-transformers      # paraphrase-multilingual-mpnet-base-v2 embedding
+
+# ── Reporting / docs export ──────────────────────────────────────────────────
+python-docx
+reportlab
+fastapi>=0.136
+sse-starlette>=1.8

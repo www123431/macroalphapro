@@ -1,0 +1,59 @@
+{
+  "name": "MacroAlphaPro · Quant Terminal",
+  "short_name": "MacroAlphaPro",
+  "description": "Institutional quant research & risk terminal — deterministic decision path, spec-fingerprint eval gates, point-in-time clean, Bailey-LdP deflated Sharpe.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0e1119",
+  "background_color": "#0e1119",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book & Positions",
+      "short_name": "Book",
+      "url": "/book"
+    },
+    {
+      "name": "Research Ops Inbox",
+      "short_name": "Inbox",
+      "url": "/inbox"
+    },
+    {
+      "name": "Model Change Control",
+      "short_name": "MCC",
+      "url": "/approvals"
+    },
+    {
+      "name": "Ops",
+      "short_name": "Ops",
+      "url": "/ops"
+    }
+  ]
+}
