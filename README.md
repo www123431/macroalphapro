@@ -39,7 +39,7 @@ event: `engine/research_store/events.jsonl` (event_type=factor_verdict_filed).
 
 | What | Number | Where to verify |
 |---|---|---|
-| Backtest Sharpe (4-sleeve canonical replay, 486 weeks) | **1.32** | [paper §4](docs/arxiv_preprint_draft_2026-06-22.md) |
+| Backtest Sharpe (4-sleeve canonical replay, 486 weeks) | **1.32** (Lo-2002 SE 0.33, 95% CI [0.67, 1.97], t=4.0) | [paper §A.1](docs/arxiv_preprint_draft_2026-06-22.md), `scripts/reports/report_sharpe_se.py` |
 | **Honest negative finding** — predictor loses to fair baseline | Brier **0.374** vs FAIR family-prior **0.260** (Δ +0.114, 95% CI [+0.054, +0.173] excludes zero, 8 rigor tests, n=94 at paper v0.9; live count refreshes daily) | paper §3, `engine/research/belief_track_record_rigor.py` |
 | End-to-end autonomous demonstration | bond-VRP RED verdict, no human in the prediction loop (consistent with Carr-Wu 2009) | paper §5 |
 | **Operator Console (2026-06-23 → 9/9 stations 2026-06-25)** | **9 of 9 Pipeline Stations live** — UI-triggerable end-to-end research pipeline + typed sessions + per-session cost cap + SSE streaming + audit trail | `engine/operator_console/` |

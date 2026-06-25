@@ -48,6 +48,64 @@ def _ensure_path(path: Path) -> None:
 # ── Jobs ─────────────────────────────────────────────────────────
 
 
+IDEMPOTENCY_WINDOW_SECONDS = 60
+"""Idempotency lookback window. If create_job is called with the same
+idempotency_key by the same actor + session + station within this many
+seconds, the existing job_id is returned instead of creating a duplicate.
+60s is the typical 'user double-clicks the trigger button' window;
+anything later is genuinely a re-attempt the user intends."""
+
+
+def _find_recent_job_by_idempotency_key(
+    *,
+    station_id: str,
+    session_id: str,
+    actor_id: str,
+    idempotency_key: str,
+    window_seconds: int = IDEMPOTENCY_WINDOW_SECONDS,
+) -> str | None:
+    """Scan jobs.jsonl for a recent QUEUED/RUNNING/COMPLETED job matching
+    the idempotency key. Returns existing job_id on hit, else None.
+
+    Reading the full jsonl on every create_job is O(N) but the window is
+    short and N stays bounded in practice; if jobs.jsonl grows huge a
+    secondary index would be the right escape hatch."""
+    if not _JOBS_PATH.is_file():
+        return None
+    cutoff_ts = (_dt.datetime.now(_dt.timezone.utc)
+                 - _dt.timedelta(seconds=window_seconds)).strftime(
+                     "%Y-%m-%dT%H:%M:%S.%fZ")
+    # Latest match wins (in case of multiple — shouldn't happen, but be safe)
+    best: str | None = None
+    corrupt_lines = 0
+    with _JOBS_PATH.open("r", encoding="utf-8") as f:
+        for line in f:
+            s = line.strip()
+            if not s:
+                continue
+            try:
+                row = json.loads(s)
+            except json.JSONDecodeError:
+                corrupt_lines += 1
+                continue
+            if row.get("station_id") != station_id:
+                continue
+            if row.get("session_id") != session_id:
+                continue
+            if row.get("actor_id") != actor_id:
+                continue
+            if row.get("idempotency_key") != idempotency_key:
+                continue
+            if (row.get("created_ts") or "") < cutoff_ts:
+                continue
+            best = row.get("job_id") or best
+    if corrupt_lines:
+        logger.warning(
+            "_find_recent_job_by_idempotency_key: skipped %d corrupt line(s) in %s",
+            corrupt_lines, _JOBS_PATH)
+    return best
+
+
 def create_job(
     *,
     station_id: str,
@@ -55,12 +113,33 @@ def create_job(
     actor_id: str,
     config: dict,
     estimated_cost_usd: float,
+    idempotency_key: str | None = None,
 ) -> str:
     """Allocate a job_id, persist the queued state, return job_id.
 
     Persisting BEFORE execution starts is the basis of R6 server-
     restart recovery: scanning for `status=running` rows on startup
-    can mark orphans as `recovered_unknown`."""
+    can mark orphans as `recovered_unknown`.
+
+    Idempotency: if idempotency_key is supplied AND a job with the same
+    (station_id, session_id, actor_id, idempotency_key) was created in
+    the last IDEMPOTENCY_WINDOW_SECONDS, the existing job_id is returned
+    — no new row is written. Protects against double-click duplicates +
+    spurious retries.
+    """
+    if idempotency_key:
+        existing = _find_recent_job_by_idempotency_key(
+            station_id      = station_id,
+            session_id      = session_id,
+            actor_id        = actor_id,
+            idempotency_key = idempotency_key,
+        )
+        if existing is not None:
+            logger.info(
+                "create_job: idempotency-key hit (%s); returning existing job_id=%s",
+                idempotency_key, existing)
+            return existing
+
     job_id = f"job_{uuid.uuid4().hex[:12]}"
     record = {
         "schema_version":     "1.0.0",
@@ -71,6 +150,7 @@ def create_job(
         "state":              JobState.QUEUED.value,
         "config":             config,
         "estimated_cost_usd": estimated_cost_usd,
+        "idempotency_key":    idempotency_key,
         "created_ts":         _utc_iso(),
         "updated_ts":         _utc_iso(),
         "started_ts":         None,

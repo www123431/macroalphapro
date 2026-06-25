@@ -54,9 +54,15 @@ class PreflightRequest(BaseModel):
 
 
 class TriggerRequest(BaseModel):
-    station_id: str
-    session_id: str
-    config:     dict = {}
+    station_id:      str
+    session_id:      str
+    config:          dict = {}
+    idempotency_key: str | None = None
+    """Optional client-supplied dedup key. If the same key is re-sent
+    within store.IDEMPOTENCY_WINDOW_SECONDS (default 60s) for the same
+    station+session+actor, the existing job_id is returned and no new
+    job is created. Frontend should generate a UUID when the trigger
+    form opens and re-send the same value on retry/double-click."""
 
 
 class CostStatusResponse(BaseModel):
@@ -152,12 +158,35 @@ async def trigger_station(
     if not allowed:
         raise HTTPException(402, f"cost cap would be exceeded: {reason}")
 
+    # Idempotency check BEFORE creating a new job. If the client passed
+    # an idempotency_key and a recent matching job exists (≤ 60s old),
+    # short-circuit: return the existing job_id, do not re-emit, do not
+    # re-schedule the worker. Protects against double-clicks burning
+    # cost twice.
+    existing_job_id = (
+        store._find_recent_job_by_idempotency_key(
+            station_id      = req.station_id,
+            session_id      = req.session_id,
+            actor_id        = x_actor_id,
+            idempotency_key = req.idempotency_key,
+        )
+        if req.idempotency_key else None
+    )
+    if existing_job_id is not None:
+        existing = store.get_job(existing_job_id)
+        return {
+            "job_id":          existing_job_id,
+            "state":           (existing or {}).get("state", JobState.RUNNING.value),
+            "idempotent_hit":  True,
+        }
+
     job_id = store.create_job(
-        station_id=req.station_id,
-        session_id=req.session_id,
-        actor_id=x_actor_id,
-        config=req.config,
-        estimated_cost_usd=est.total_usd,
+        station_id      = req.station_id,
+        session_id      = req.session_id,
+        actor_id        = x_actor_id,
+        config          = req.config,
+        estimated_cost_usd = est.total_usd,
+        idempotency_key = req.idempotency_key,
     )
     emit.station_triggered(
         session_id=req.session_id,
@@ -174,7 +203,7 @@ async def trigger_station(
     # /stream/{job_id}.
     background.add_task(run_job, job_id)
 
-    return {"job_id": job_id, "state": JobState.RUNNING.value}
+    return {"job_id": job_id, "state": JobState.RUNNING.value, "idempotent_hit": False}
 
 
 @router.get("/status/{job_id}")

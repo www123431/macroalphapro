@@ -422,19 +422,48 @@ Source: `data/portfolio_replay/v1_combined_replay_verdict.json` — the canonica
 | metric | value |
 |---|---|
 | Sharpe (ann) | **1.3165** |
+| Sharpe SE (Lo 2002, IID) | 0.3298 |
+| Sharpe 95% CI | [+0.670, +1.963] |
+| Sharpe t-stat (vs SR=0) | 3.99 (p < 0.0001) |
 | ann return | 0.0807 |
 | ann vol | 0.0615 |
 | MaxDD | -0.0579 |
 | n_weeks | 486 (~9.4 years) |
 
+**Reading the SE.** 9.4 years of weekly returns is enough to reject
+SR=0 at p < 0.0001, but not enough to discriminate SR=1.0 from SR=1.5
+— the 95% CI spans [0.67, 1.97]. The IID-returns assumption (Lo 2002
+Eq 3) understates true uncertainty for autocorrelated streams;
+Mertens (2002) / Christie (2005) adjustments would widen the CI by
+~10-30%. The point estimate is plausibly anywhere in that range
+under sampling uncertainty alone, before any out-of-sample degradation
+is applied. Source: `scripts/reports/report_sharpe_se.py`.
+
 ### A.2 Per-strategy stats
 
-| strategy | Sharpe | ann return | ann vol | MaxDD |
-|---|---|---|---|---|
-| K1_BAB | 0.7624 | 0.0388 | 0.0509 | -0.0953 |
-| D_PEAD | 0.9312 | 0.0954 | 0.1024 | -0.1499 |
-| PATH_N | 0.7290 | 0.1359 | 0.1865 | -0.2537 |
-| CTA_PQTIX | 0.4298 | 0.0453 | 0.1053 | -0.1873 |
+| strategy | Sharpe | SE | 95% CI | t-stat | p (SR > 0) |
+|---|---|---|---|---|---|
+| K1_BAB | 0.7624 | 0.328 | [+0.12, +1.41] | 2.32 | 0.010 |
+| D_PEAD | 0.9312 | 0.329 | [+0.29, +1.58] | 2.83 | 0.002 |
+| PATH_N | 0.7290 | 0.328 | [+0.09, +1.37] | 2.22 | 0.013 |
+| CTA_PQTIX | 0.4298 | 0.327 | [-0.21, +1.07] | 1.31 | **0.094** |
+
+**Note on CTA_PQTIX.** At n=486 weekly observations, CTA_PQTIX as a
+standalone sleeve is **not significantly distinguishable from zero
+Sharpe** at the 5% level (p = 0.094, one-sided). Its contribution to
+the combined book comes from diversification — near-zero correlation
+with the other three sleeves — not from standalone alpha. We keep it
+in the canonical replay because the diversification gain is real,
+not because the standalone Sharpe survives a strict significance test.
+
+Per-strategy return / vol / MaxDD:
+
+| strategy | ann return | ann vol | MaxDD |
+|---|---|---|---|
+| K1_BAB | 0.0388 | 0.0509 | -0.0953 |
+| D_PEAD | 0.0954 | 0.1024 | -0.1499 |
+| PATH_N | 0.1359 | 0.1865 | -0.2537 |
+| CTA_PQTIX | 0.0453 | 0.1053 | -0.1873 |
 
 ### A.3 Pairwise correlations (in replay window)
 
