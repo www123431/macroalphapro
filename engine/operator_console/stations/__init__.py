@@ -5,6 +5,7 @@ populate the registry before serving API requests.
 
 Stations attached:
     S1 — Paper Ingest    (2026-06-23)
+    S2 — Hypothesis Synthesize (2026-06-25)
     S3 — FactorSpec Extract (2026-06-23)
     S4 — FORWARD Dispatch (2026-06-23)
     S6 — Verdict View (2026-06-23)
@@ -13,10 +14,10 @@ Stations attached:
     S8b — Doctrine Lock (2026-06-23)
 
 Future:
-    S2 — Hypothesis Synthesize
     S5 — ENHANCE Dispatch
 """
 from engine.operator_console.stations import s1_paper_ingest          # noqa: F401
+from engine.operator_console.stations import s2_synthesize            # noqa: F401
 from engine.operator_console.stations import s3_factorspec_extract    # noqa: F401
 from engine.operator_console.stations import s4_forward_dispatch      # noqa: F401
 from engine.operator_console.stations import s6_verdict_view          # noqa: F401

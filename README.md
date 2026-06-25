@@ -225,15 +225,53 @@ python -m pytest tests/test_claim_type_router.py
 # Reproduces: Section 2.4 (router v2 false-positive rate ~0%)
 ```
 
-### Quick start (no WRDS, sample data only)
+### What you can actually run from this snapshot
+
+| Path | Needs | Time | What you get |
+|---|---|---|---|
+| **Read the code + paper** | nothing | 0 | The methodology + statistical anchors are all in `docs/` + inline; this is the path most readers should take |
+| **Reproduce the belief-layer headline numbers** | Python 3.10+ | ~10 min | Brier 0.374, the honest-negative finding, ClaimType router accuracy — the 3 numbered scripts in *Reproducibility* above. No external data, no API keys. |
+| **Run the test suite** | Python 3.10+ | ~5 min | 5,744 of 5,805 tests collect without WRDS (the 61 deselected ones probe live WRDS connections) |
+| **Run the Operator Console UI** | Python 3.10+ · Node 18+ | ~20 min | Local FastAPI backend + Next.js frontend; ingest a paper, browse stations, see SSE progress live |
+| **Reproduce the live backtest** | WRDS subscription + credentials | several hours | The Sharpe 1.32 4-sleeve replay; needs CRSP/Compustat/IBES/OptionMetrics |
+
+### Quick start — minimal path (no WRDS, no Node, ~10 min)
 
 ```bash
 git clone https://github.com/falsifiable-t/macroalphapro.git
 cd macroalphapro
+
+# Python 3.10 or 3.11 (3.12 untested, 3.13 will likely break torch deps)
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m pytest tests/ -k "not wrds"     # ~10s, unit tests only
+
+# Sanity: 52 fast tests (router + track-record) pass clean, no external data
+python -m pytest tests/test_papers_curator_claim_type_router.py tests/test_belief_track_record.py -q
+
+# Reproduce the headline Brier number from the arxiv paper
 python scripts/reports/report_belief_track_record_rigor.py
 ```
+
+### Quick start — full stack with UI (~20 min)
+
+```bash
+# 1. Backend (same as minimal path above, then:)
+uvicorn api.main:app --reload --port 8000
+
+# 2. Frontend (new terminal)
+cd frontend
+npm install
+npm run dev          # http://localhost:3000
+
+# Open http://localhost:3000/console — Operator Console launchpad
+# Open a research_new session, trigger S1 Paper Ingest with an arxiv URL
+```
+
+### Installation troubleshooting
+
+- **`win10toast` fails on Mac/Linux**: it's Windows-only, fail-soft at runtime. Remove the line from `requirements.txt` before installing on non-Windows.
+- **`wrds` install hangs / errors**: this dep requires a WRDS account configured in `~/.pgpass`. If you don't have WRDS access, comment out the `wrds` line — every belief-layer demo runs without it.
+- **`sentence-transformers` pulls ~2GB of PyTorch**: required for the doctrine retrieval layer; if you only want to reproduce belief-layer numbers, you can `pip install --no-deps -r requirements.txt` then install just `numpy pandas scipy scikit-learn arch`.
 
 ---
 
