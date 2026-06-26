@@ -336,13 +336,20 @@ def validate_registry(
         errors.append(str(exc))
 
     # 3. conditional_on.lens must reference an existing lens
+    # B.3 (2026-06-10): conditional_on.lens may be a single lens name
+    # OR a tuple of alternative producers (e.g. anchor_regression for
+    # equity OR fx_carry_anchor_regression for FX). Validate each name
+    # in the tuple individually; lens passes if ALL named producers exist.
     for name, lens in registry.items():
         if lens.conditional_on:
             target = lens.conditional_on.get("lens")
-            if target and target not in registry:
-                errors.append(
-                    f"{name}: conditional_on references unknown "
-                    f"lens {target!r}"
-                )
+            if target:
+                targets = target if isinstance(target, (tuple, list)) else (target,)
+                missing = [t for t in targets if t not in registry]
+                if missing:
+                    errors.append(
+                        f"{name}: conditional_on references unknown "
+                        f"lens(es) {tuple(missing)!r}"
+                    )
 
     return errors

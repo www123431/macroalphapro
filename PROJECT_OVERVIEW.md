@@ -9,7 +9,7 @@
 
 ## 1. One-Sentence Summary
 
-A one-person quant research workbench that combines a 4-sleeve systematic strategy book (backtest Sharpe 1.32 over 486 weeks) with an LLM-augmented research pipeline that crawls papers, proposes hypotheses, runs rigorous statistical tests, and — load-bearing — publicly tracks the calibration of its own predictions before each test runs.
+A one-person quant research workbench that combines a 4-sleeve systematic strategy book (in-sample retrospective replay Sharpe 1.32, Lo-2002 SE 0.33, 95% CI [+0.67, +1.97], t=4.0; 486 weeks 2014-09 → 2023-12) with an LLM-augmented research pipeline that crawls papers, proposes hypotheses, runs rigorous statistical tests, and — load-bearing — publicly tracks the calibration of its own predictions before each test runs. **The single most differentiating finding: the predictor LOSES to a fair time-aware family-prior baseline by +0.114 Brier, and the loss was published instead of hidden.**
 
 ---
 
@@ -18,10 +18,14 @@ A one-person quant research workbench that combines a 4-sleeve systematic strate
 ### 2.1 Deployed Strategy Book
 
 - **4 sleeves**: K1_BAB, D_PEAD, PATH_N, CTA_PQTIX
-- **Backtest replay (486 weeks ~9.4 years)**: Sharpe **1.32**, MaxDD −5.8%, ann return 8.07%
-- **Forward expectation per design**: Sharpe 0.85–1.15 (replay-vs-OOS degrades)
-- **Live paper trade**: started 2026-05-14 (~1 month; n=21 NAV records; cum return −0.18%; too short for Sharpe inference)
-- Source: `data/portfolio_replay/v1_combined_replay_verdict.json`
+- **Backtest = in-sample retrospective replay** (2014-09-05 → 2023-12-22, 486 weekly obs ~9.4 years); NOT walk-forward / NOT CPCV — the deployment-design doc explicitly labels this in-sample
+- **Combined metrics**: Sharpe **1.32**, MaxDD −5.8%, ann return 8.07%
+- **Lo (2002) Sharpe SE**: 0.33, 95% CI [+0.67, +1.97], t-stat 4.0 vs SR=0 (significant at p<0.0001) — `scripts/reports/report_sharpe_se.py` reproduces
+- **Per-sleeve SE caveat**: CTA_PQTIX standalone Sharpe 0.43 is NOT significant at 5% (p=0.094); its contribution to the combined book comes from diversification (near-zero correlation with the other 3), not standalone alpha. Honest disclosure
+- **Forward expectation per design**: Sharpe 0.85–1.15 (in-sample → OOS degrades; banding reflects this)
+- **Live paper trade**: started 2026-05-13 (cron daily; latest attribution log 2026-06-24; too short for Sharpe inference)
+- **2 real halt events recorded since go-live**: 2026-05-19 (GLD +7.50% > 5% sleeve cap mode 1) and 2026-06-17 (PATH_N MRVL +25.00% > 5% intra-strategy cap mode 1b) — both pre-trade Risk Manager (spec id=69) stopped the order before it shipped
+- Source: `data/portfolio_replay/v1_combined_replay_verdict.json` (private; values reproduced inline in arxiv §A.1)
 - Detailed attribution: `data/research/deployed_book_attribution.md`
 
 ### 2.2 Public-Facing Paper (arxiv draft)
@@ -112,6 +116,40 @@ one day; see `INTERNAL_DESIGN_INDEX §14` for the full narrative.
 
 Audience served: principal daily monitoring, recruiter 90-second
 scan, arxiv reviewer "is this real?" check, future-Claude continuity.
+
+### 2.7b Operator Console — 9 of 9 Pipeline Stations LIVE (2026-06-23 → 2026-06-25)
+
+UI-triggerable end-to-end research pipeline. Lets an external operator
+drive the full paper-to-verdict chain through clicks alone — no Claude
+conversation required. Each station implements the 5-element contract
+(preflight / cost estimate / JSON-schema config form / async execute
+with SSE progress / lineage hints to next station).
+
+| ID | Station | Cost | Capital? |
+|---|---|---|---|
+| S1 | Paper Ingest (arxiv URL → ClaimType → registry) | $0.00 | read-only |
+| S2 | Hypothesize (LLM synthesis from recent corpus) | $0.10 | read-only |
+| S3 | FactorSpec Extract (hypothesis → spec_hash) | $0.05 | read-only |
+| S4 | FORWARD Dispatch (spec → strict-gate verdict, 8 stat tests) | $0.10 | read-only |
+| S5 | ENHANCE Dispatch (variant CSV → paired bootstrap verdict) | $0.00 | read-only |
+| S6 | Verdict View (drill prediction + autopsy + lineage) | $0.00 | read-only |
+| S7 | PROMOTE 9-gate MVP (GREEN verdict → /approvals) | $0.00 | **mutates_capital → /approvals** |
+| S8 | Rollback (deployed sleeve → /approvals) | $0.00 | **mutates_capital → /approvals** |
+| S8b | Doctrine Lock (form → memory/*.md + event) | $0.00 | read-only |
+
+**Capital-decision doctrine, code-enforced**: `StationSpec.mutates_capital`
+is checked at import time. Any station declaring `mutates_capital=True`
+whose source doesn't reference `_proposals.jsonl` raises
+`CapitalDoctrineViolation` on register. Doctrine is the type system,
+not a comment.
+
+**Idempotency**: `create_job(..., idempotency_key=...)` short-circuits
+duplicate jobs within a 60-second window — double-click on the trigger
+button no longer burns cost twice.
+
+Source: `engine/operator_console/` (9 stations + registry + worker +
+cost ledger + event store), `frontend/components/operator_console/`,
+`api/routes_operator_console.py` (15 endpoints), `docs/architecture/operator_console.md`.
 
 ### 2.8 Public GitHub Snapshot Pipeline — LIVE (2026-06-23)
 

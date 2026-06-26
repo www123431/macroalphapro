@@ -300,7 +300,20 @@ After v1 (commit `db2219d0`), principal flagged "I'm afraid you forget what we d
 
 ## 11. Comprehensive Module Inventory (audit-verified 2026-06-22)
 
-### 11.1 engine/agents/ (19 agent types)
+### 11.1 engine/agents/ (25 module entries — see note below)
+
+> **On the count.** The table below has 25 rows. "~19 agent types" is
+> the conservative collapse-by-functional-role count: autopilot is one
+> row covering 4 sub-files (`autopilot.py` + `_devils_advocate.py` +
+> `_live.py` + `_pre_compute_da.py`); persona is one row containing a
+> 12-persona container; `eval` and `governance` are cross-cutting
+> infrastructure rather than domain agents. README cites "~20 specialist
+> agent modules" which matches 25 minus the persona container counted as
+> 1; some older session notes cite "19" which matches further collapsing
+> `eval` + `governance` + `research_diagnostician` + `audit_verifier`
+> into "audit/eval/governance" as one functional cluster. **None of the
+> count framings is wrong — they're different aggregation choices over
+> the same 25 module entries.**
 
 | Agent | Subdir/file | Status | Purpose |
 |---|---|---|---|
